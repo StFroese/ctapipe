@@ -111,13 +111,30 @@ class TableLoader(Component):
         False, help="join subarray instrument information to each event"
     ).tag(config=True)
 
+    focal_length_choice = traits.CaselessStrEnum(
+        ["nominal", "effective"],
+        default_value="effective",
+        help=(
+            "If both nominal and effective focal lengths are available, "
+            " which one to use for the `CameraFrame` attached"
+            " to the `CameraGeometry` instances in the `SubarrayDescription`"
+            ", which will be used in CameraFrame to TelescopeFrame coordinate"
+            " transforms. The 'nominal' focal length is the one used during "
+            " the simulation, the 'effective' focal length is computed using specialized "
+            " ray-tracing from a point light source"
+        ),
+    ).tag(config=True)
+
     def __init__(self, input_url=None, **kwargs):
         # enable using input_url as posarg
         if input_url not in {None, traits.Undefined}:
             kwargs["input_url"] = input_url
         super().__init__(**kwargs)
 
-        self.subarray = SubarrayDescription.from_hdf(self.input_url)
+        self.subarray = SubarrayDescription.from_hdf(
+            self.input_url,
+            focal_length_choice=self.focal_length_choice,
+        )
         self.h5file = tables.open_file(self.input_url, mode="r")
 
         Provenance().add_input_file(self.input_url, role="Event data")

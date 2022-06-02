@@ -16,7 +16,7 @@ from ctapipe.instrument import (
 
 
 def example_subarray(n_tels=10):
-    """ generate a simple subarray for testing purposes """
+    """generate a simple subarray for testing purposes"""
     rng = np.random.default_rng(0)
 
     pos = {}
@@ -32,7 +32,7 @@ def example_subarray(n_tels=10):
 
 
 def test_subarray_description():
-    """ Test SubarrayDescription functionality """
+    """Test SubarrayDescription functionality"""
     n_tels = 10
     sub = example_subarray(n_tels)
     sub.peek()
@@ -67,14 +67,14 @@ def test_subarray_description():
 
 
 def test_to_table(example_subarray):
-    """ Check that we can generate astropy Tables from the SubarrayDescription """
+    """Check that we can generate astropy Tables from the SubarrayDescription"""
     sub = example_subarray
     assert len(sub.to_table(kind="subarray")) == sub.num_tels
     assert len(sub.to_table(kind="optics")) == len(sub.optics_types)
 
 
 def test_tel_indexing(example_subarray):
-    """ Check that we can convert between telescope_id and telescope_index """
+    """Check that we can convert between telescope_id and telescope_index"""
     sub = example_subarray
 
     assert sub.tel_indices[1] == 0  # first tel_id is in slot 0
@@ -118,7 +118,7 @@ def test_hdf(example_subarray, tmp_path):
     path = tmp_path / "subarray.h5"
 
     example_subarray.to_hdf(path)
-    read = SubarrayDescription.from_hdf(path)
+    read = SubarrayDescription.from_hdf(path, focal_length_choice="nominal")
 
     assert example_subarray == read
 
@@ -137,7 +137,7 @@ def test_hdf(example_subarray, tmp_path):
     with tables.open_file(path, "r+") as hdf:
         del hdf.root.configuration.instrument.subarray._v_attrs.name
 
-    no_name = SubarrayDescription.from_hdf(path)
+    no_name = SubarrayDescription.from_hdf(path, focal_length_choice="nominal")
     assert no_name.name == "Unknown"
 
     # Test we can also write and read to an already opened h5file
@@ -145,7 +145,8 @@ def test_hdf(example_subarray, tmp_path):
         example_subarray.to_hdf(h5file)
 
     with tables.open_file(path, "r") as h5file:
-        assert SubarrayDescription.from_hdf(h5file) == example_subarray
+        read = SubarrayDescription.from_hdf(h5file, focal_length_choice="nominal")
+        assert read == example_subarray
 
 
 def test_hdf_same_camera(tmp_path):
@@ -162,7 +163,7 @@ def test_hdf_same_camera(tmp_path):
 
     path = tmp_path / "subarray.h5"
     array.to_hdf(path)
-    read = SubarrayDescription.from_hdf(path)
+    read = SubarrayDescription.from_hdf(path, focal_length_choice="nominal")
     assert array == read
 
 
@@ -192,7 +193,7 @@ def test_hdf_duplicate_string_repr(tmp_path):
 
     path = tmp_path / "subarray.h5"
     array.to_hdf(path)
-    read = SubarrayDescription.from_hdf(path)
+    read = SubarrayDescription.from_hdf(path, focal_length_choice="nominal")
     assert array == read
     assert (
         read.tel[1].optics.num_mirror_tiles == read.tel[2].optics.num_mirror_tiles + 1
