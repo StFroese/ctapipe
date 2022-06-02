@@ -40,18 +40,33 @@ class OpticsDescription:
         if the units of one of the inputs are missing or incompatible
     """
 
-    @u.quantity_input(mirror_area=u.m ** 2, equivalent_focal_length=u.m)
+    __slots__ = (
+        "name",
+        "equivalent_focal_length",
+        "effective_focal_length",
+        "mirror_area",
+        "num_mirrors",
+        "num_mirror_tiles",
+    )
+
+    @u.quantity_input(
+        mirror_area=u.m**2,
+        equivalent_focal_length=u.m,
+        effective_focal_length=u.m,
+    )
     def __init__(
         self,
         name,
         num_mirrors,
         equivalent_focal_length,
+        effective_focal_length,
         mirror_area=None,
         num_mirror_tiles=None,
     ):
 
         self.name = name
         self.equivalent_focal_length = equivalent_focal_length.to(u.m)
+        self.effective_focal_length = effective_focal_length.to(u.m)
         self.mirror_area = mirror_area
         self.num_mirrors = num_mirrors
         self.num_mirror_tiles = num_mirror_tiles
@@ -61,6 +76,7 @@ class OpticsDescription:
         return hash(
             (
                 self.equivalent_focal_length.to_value(u.m),
+                self.effective_focal_length.to_value(u.m),
                 self.mirror_area,
                 self.num_mirrors,
                 self.num_mirror_tiles,
@@ -113,7 +129,7 @@ class OpticsDescription:
 
         if version == "1.0":
             mask = table["tel_description"] == name
-        elif version == "2.0":
+        else:
             mask = table["description"] == name
 
         if np.count_nonzero(mask) == 0:
@@ -121,19 +137,24 @@ class OpticsDescription:
 
         if version == "1.0":
             num_mirrors = 1 if table["mirror_type"][mask][0] == "DC" else 2
-        elif version == "2.0":
+        else:
             num_mirrors = table["num_mirrors"][mask][0]
 
-        flen = table["equivalent_focal_length"][mask].quantity[0]
+        if version in {"1.0", "2.0"}:
+            eff_focal_length = np.nan * u.m
+        else:
+            eff_focal_length = table["effective_focal_length"][mask].quantity[0]
 
-        optics = cls(
+        focal_length = table["equivalent_focal_length"][mask].quantity[0]
+
+        return cls(
             name=name,
             num_mirrors=num_mirrors,
-            equivalent_focal_length=flen,
+            equivalent_focal_length=focal_length,
+            effective_focal_length=eff_focal_length,
             mirror_area=table["mirror_area"][mask].quantity[0],
             num_mirror_tiles=table["num_mirror_tiles"][mask][0],
         )
-        return optics
 
     @classmethod
     def get_known_optics_names(cls, optics_table="optics"):

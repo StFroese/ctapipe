@@ -90,7 +90,7 @@ class SubarrayDescription:
 
     @property
     def tel(self):
-        """ for backward compatibility"""
+        """for backward compatibility"""
         return self.tels
 
     @property
@@ -132,7 +132,7 @@ class SubarrayDescription:
 
     @lazyproperty
     def tel_coords(self):
-        """ returns telescope positions as astropy.coordinates.SkyCoord"""
+        """returns telescope positions as astropy.coordinates.SkyCoord"""
 
         pos_x = np.array([p[0].to("m").value for p in self.positions.values()]) * u.m
         pos_y = np.array([p[1].to("m").value for p in self.positions.values()]) * u.m
@@ -142,7 +142,7 @@ class SubarrayDescription:
 
     @lazyproperty
     def tel_ids(self):
-        """ telescope IDs as an array"""
+        """telescope IDs as an array"""
         return np.array(list(self.tel.keys()))
 
     @lazyproperty
@@ -277,24 +277,32 @@ class SubarrayDescription:
             unique_types = self.telescope_types
 
             mirror_area = u.Quantity(
-                [t.optics.mirror_area.to_value(u.m ** 2) for t in unique_types],
-                u.m ** 2,
+                [t.optics.mirror_area.to_value(u.m**2) for t in unique_types],
+                u.m**2,
             )
             focal_length = u.Quantity(
                 [t.optics.equivalent_focal_length.to_value(u.m) for t in unique_types],
                 u.m,
             )
-            cols = {
-                "description": [str(t) for t in unique_types],
-                "name": [t.name for t in unique_types],
-                "type": [t.type for t in unique_types],
-                "mirror_area": mirror_area,
-                "num_mirrors": [t.optics.num_mirrors for t in unique_types],
-                "num_mirror_tiles": [t.optics.num_mirror_tiles for t in unique_types],
-                "equivalent_focal_length": focal_length,
-            }
-            tab = Table(cols)
-            tab.meta["TAB_VER"] = "2.0"
+            effective_focal_length = u.Quantity(
+                [t.optics.effective_focal_length.to_value(u.m) for t in unique_types],
+                u.m,
+            )
+            tab = Table(
+                {
+                    "description": [str(t) for t in unique_types],
+                    "name": [t.name for t in unique_types],
+                    "type": [t.type for t in unique_types],
+                    "mirror_area": mirror_area,
+                    "num_mirrors": [t.optics.num_mirrors for t in unique_types],
+                    "num_mirror_tiles": [
+                        t.optics.num_mirror_tiles for t in unique_types
+                    ],
+                    "equivalent_focal_length": focal_length,
+                    "effective_focal_length": effective_focal_length,
+                }
+            )
+            tab.meta["TAB_VER"] = "3.0"
         else:
             raise ValueError(f"Table type '{kind}' not known")
 
@@ -362,17 +370,17 @@ class SubarrayDescription:
 
     @lazyproperty
     def telescope_types(self) -> List[TelescopeDescription]:
-        """ list of telescope types in the array"""
+        """list of telescope types in the array"""
         return list({tel for tel in self.tel.values()})
 
     @lazyproperty
     def camera_types(self) -> List[CameraDescription]:
-        """ list of camera types in the array """
+        """list of camera types in the array"""
         return list({tel.camera for tel in self.tel.values()})
 
     @lazyproperty
     def optics_types(self) -> List[OpticsDescription]:
-        """ list of optics types in the array """
+        """list of optics types in the array"""
         return list({tel.optics for tel in self.tel.values()})
 
     def get_tel_ids_for_type(self, tel_type):
@@ -567,6 +575,7 @@ class SubarrayDescription:
                 row["name"],
                 num_mirrors=row["num_mirrors"],
                 equivalent_focal_length=row["equivalent_focal_length"],
+                effective_focal_length=row["effective_focal_length"],
                 mirror_area=row["mirror_area"],
                 num_mirror_tiles=row["num_mirror_tiles"],
             )
