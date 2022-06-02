@@ -73,10 +73,16 @@ class OpticsDescription:
 
     def __hash__(self):
         """Make this hashable, so it can be used as dict keys or in sets"""
+        effective_focal_length = self.effective_focal_length.to_value(u.m)
+        # nan hash is objet id in python >= 3.10, we want a fixed hash for all
+        # nans
+        if np.isnan(effective_focal_length):
+            effective_focal_length = -1
+
         return hash(
             (
                 self.equivalent_focal_length.to_value(u.m),
-                self.effective_focal_length.to_value(u.m),
+                effective_focal_length,
                 self.mirror_area,
                 self.num_mirrors,
                 self.num_mirror_tiles,
@@ -180,6 +186,7 @@ class OpticsDescription:
             f"{self.__class__.__name__}"
             f"(name={self.name}"
             f", equivalent_focal_length={self.equivalent_focal_length:.2f}"
+            f", effective_focal_length={self.effective_focal_length:.2f}"
             f", num_mirrors={self.num_mirrors}"
             f", mirror_area={self.mirror_area:.2f}"
             ")"
