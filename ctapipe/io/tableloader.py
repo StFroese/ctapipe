@@ -71,14 +71,6 @@ def _get_structure(h5file):
     return "by_type"
 
 
-def _add_column_prefix(table, prefix, ignore=()):
-    """
-    Add a prefix to all columns in table besides columns in ``ignore``.
-    """
-    for col in set(table.colnames) - set(ignore):
-        table.rename_column(col, f"{prefix}_{col}")
-
-
 def _join_subarray_events(table1, table2):
     """Outer join two tables on the telescope subarray keys"""
     return join_allow_empty(table1, table2, SUBARRAY_EVENT_KEYS, "outer")
@@ -243,12 +235,6 @@ class TableLoader(Component):
 
                     for algorithm in group._v_children:
                         dl2 = read_table(self.h5file, f"{group_path}/{algorithm}")
-
-                        # add the algorithm as prefix to distinguish multiple
-                        # algorithms predicting the same quantities
-                        _add_column_prefix(
-                            dl2, prefix=algorithm, ignore=SUBARRAY_EVENT_KEYS
-                        )
                         table = _join_subarray_events(table, dl2)
         return table
 
@@ -290,12 +276,6 @@ class TableLoader(Component):
                     for algorithm in group._v_children:
                         path = f"{group_path}/{algorithm}"
                         dl2 = self._read_telescope_table(path, tel_id)
-
-                        # add the algorithm as prefix to distinguish multiple
-                        # algorithms predicting the same quantities
-                        _add_column_prefix(
-                            dl2, prefix=algorithm, ignore=TELESCOPE_EVENT_KEYS
-                        )
                         table = _join_telescope_events(table, dl2)
 
         if self.load_true_images:
