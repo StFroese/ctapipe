@@ -99,16 +99,18 @@ def _get_shower_trans_matrix(azimuth, zenith, inverse=False):
 
     Parameters
     ----------
-    azimuth: float
+    azimuth: u.Quantity[angle]
         Azimuth angle in radians of the tilted system used
-    zenith: float
+    zenith: u.Quantity[angle]
         Zenith angle in radiuan of the tilted system used
 
     Returns
     -------
     trans: 3x3 ndarray transformation matrix
     """
-    rot = Rotation.from_euler("zy", [azimuth.to_value(u.rad), -zenith.to_value(u.rad)])
+    rot = Rotation.from_euler(
+        "zy", np.stack((azimuth.to_value(u.rad), -zenith.to_value(u.rad)), -1)
+    )
     if inverse:
         rot = rot.inv()
     return rot.as_matrix()
