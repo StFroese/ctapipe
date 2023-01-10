@@ -1,0 +1,21 @@
+SKLearnClassficationReconstructor
+=================================
+
+.. currentmodule:: ctapipe.reco.sklearn
+
+.. autoclass:: SKLearnClassficationReconstructor
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~SKLearnClassficationReconstructor.invalid_class
+      ~SKLearnClassficationReconstructor.model_cls
+      ~SKLearnClassficationReconstructor.positive_class
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: invalid_class
+   .. autoattribute:: model_cls
+   .. autoattribute:: positive_class
